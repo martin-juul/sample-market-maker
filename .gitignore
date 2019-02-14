@@ -1,4 +1,4 @@
-/settings.py
+/.env
 *.pyc
 dist/
 *.egg-info/

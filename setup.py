@@ -4,18 +4,16 @@ from os.path import dirname, join
 
 import market_maker
 
-
 here = dirname(__file__)
-
 
 setup(name='bitmex-market-maker',
       version=market_maker.__version__,
       description='Market making bot for BitMEX API',
-      url='https://github.com/BitMEX/sample-market-maker',
+      url='https://github.com/martin-juul/sample-market-maker',
       long_description=open(join(here, 'README.md')).read(),
       long_description_content_type='text/markdown',
-      author='Samuel Reed',
-      author_email='sam@bitmex.com',
+      author='Martin Juul',
+      author_email='code@juul.xyz',
       install_requires=[
           'requests',
           'websocket-client',
