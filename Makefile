@@ -15,3 +15,6 @@ publish: clean build
 
 publish-test: clean build
 	twine upload -r pypitest $(DIST)/*
+
+docker-build:
+	docker build -t bitmex-market-maker .

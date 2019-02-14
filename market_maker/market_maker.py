@@ -14,8 +14,8 @@ from market_maker.utils import log, constants, errors, math
 
 # Used for reloading the bot - saves modified times of key files
 import os
-watched_files_mtimes = [(f, getmtime(f)) for f in settings.WATCHED_FILES]
 
+watched_files_mtimes = [(f, getmtime(f)) for f in settings.WATCHED_FILES]
 
 #
 # Helpers
@@ -145,16 +145,16 @@ class ExchangeInterface:
     def get_highest_buy(self):
         buys = [o for o in self.get_orders() if o['side'] == 'Buy']
         if not len(buys):
-            return {'price': -2**32}
+            return {'price': -2 ** 32}
         highest_buy = max(buys or [], key=lambda o: o['price'])
-        return highest_buy if highest_buy else {'price': -2**32}
+        return highest_buy if highest_buy else {'price': -2 ** 32}
 
     def get_lowest_sell(self):
         sells = [o for o in self.get_orders() if o['side'] == 'Sell']
         if not len(sells):
-            return {'price': 2**32}
+            return {'price': 2 ** 32}
         lowest_sell = min(sells or [], key=lambda o: o['price'])
-        return lowest_sell if lowest_sell else {'price': 2**32}  # ought to be enough for anyone
+        return lowest_sell if lowest_sell else {'price': 2 ** 32}  # ought to be enough for anyone
 
     def get_position(self, symbol=None):
         if symbol is None:
@@ -365,8 +365,9 @@ class OrderManager:
                         # If price has changed, and the change is more than our RELIST_INTERVAL, amend.
                         desired_order['price'] != order['price'] and
                         abs((desired_order['price'] / order['price']) - 1) > settings.RELIST_INTERVAL):
-                    to_amend.append({'orderID': order['orderID'], 'orderQty': order['cumQty'] + desired_order['orderQty'],
-                                     'price': desired_order['price'], 'side': order['side']})
+                    to_amend.append(
+                        {'orderID': order['orderID'], 'orderQty': order['cumQty'] + desired_order['orderQty'],
+                         'price': desired_order['price'], 'side': order['side']})
             except IndexError:
                 # Will throw if there isn't a desired order to match. In that case, cancel it.
                 to_cancel.append(order)
@@ -517,6 +518,7 @@ class OrderManager:
     def restart(self):
         logger.info("Restarting the market maker...")
         os.execv(sys.executable, [sys.executable] + sys.argv)
+
 
 #
 # Helpers

@@ -1,0 +1,7 @@
+version: '2'
+
+services:
+  bitmex-bot:
+    image: bitmex-market-maker:latest
+    volumes:
+      - .env:/usr/local/marketmaker/.env:ro
