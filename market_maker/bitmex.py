@@ -17,22 +17,22 @@ class BitMEX(object):
 
     """BitMEX API Connector."""
 
-    def __init__(self, base_url=None, symbol=None, apiKey=None, apiSecret=None,
-                 orderIDPrefix='mm_bitmex_', shouldWSAuth=True, postOnly=False, timeout=7):
+    def __init__(self, base_url=None, symbol=None, api_key=None, api_secret=None,
+                 order_id_prefix='mm_bitmex_', should_ws_auth=True, post_only=False, timeout=7):
         """Init connector."""
         self.logger = logging.getLogger('root')
         self.base_url = base_url
         self.symbol = symbol
-        self.postOnly = postOnly
-        if (apiKey is None):
+        self.postOnly = post_only
+        if api_key is None:
             raise Exception("Please set an API key and Secret to get started. See " +
                             "https://github.com/BitMEX/sample-market-maker/#getting-started for more information."
                             )
-        self.apiKey = apiKey
-        self.apiSecret = apiSecret
-        if len(orderIDPrefix) > 13:
+        self.apiKey = api_key
+        self.apiSecret = api_secret
+        if len(order_id_prefix) > 13:
             raise ValueError("settings.ORDERID_PREFIX must be at most 13 characters long!")
-        self.orderIDPrefix = orderIDPrefix
+        self.orderIDPrefix = order_id_prefix
         self.retries = 0  # initialize counter
 
         # Prepare HTTPS session
@@ -44,7 +44,7 @@ class BitMEX(object):
 
         # Create websocket for streaming data
         self.ws = BitMEXWebsocket()
-        self.ws.connect(base_url, symbol, shouldAuth=shouldWSAuth)
+        self.ws.connect(base_url, symbol, should_auth=should_ws_auth)
 
         self.timeout = timeout
 
@@ -97,7 +97,7 @@ class BitMEX(object):
     def authentication_required(fn):
         """Annotation for methods that require auth."""
         def wrapped(self, *args, **kwargs):
-            if not (self.apiKey):
+            if not self.apiKey:
                 msg = "You must be authenticated to use this method"
                 raise errors.AuthenticationError(msg)
             else:
@@ -151,13 +151,13 @@ class BitMEX(object):
             raise Exception("Price must be positive.")
 
         endpoint = "order"
-        # Generate a unique clOrdID with our prefix so we can identify it.
-        clOrdID = self.orderIDPrefix + base64.b64encode(uuid.uuid4().bytes).decode('utf8').rstrip('=\n')
+        # Generate a unique cl_ord_id with our prefix so we can identify it.
+        cl_ord_id = self.orderIDPrefix + base64.b64encode(uuid.uuid4().bytes).decode('utf8').rstrip('=\n')
         postdict = {
             'symbol': self.symbol,
             'orderQty': quantity,
             'price': price,
-            'clOrdID': clOrdID
+            'cl_ord_id': cl_ord_id
         }
         return self._curl_bitmex(path=endpoint, postdict=postdict, verb="POST")
 

@@ -7,10 +7,10 @@ class APIKeyAuthWithExpires(AuthBase):
 
     """Attaches API Key Authentication to the given Request object. This implementation uses `expires`."""
 
-    def __init__(self, apiKey, apiSecret):
+    def __init__(self, api_key, api_secret):
         """Init with Key & Secret."""
-        self.apiKey = apiKey
-        self.apiSecret = apiSecret
+        self.apiKey = api_key
+        self.apiSecret = api_secret
 
     def __call__(self, r):
         """

@@ -31,13 +31,13 @@ class ExchangeInterface:
         else:
             self.symbol = settings.SYMBOL
         self.bitmex = bitmex.BitMEX(base_url=settings.BASE_URL, symbol=self.symbol,
-                                    apiKey=settings.API_KEY, apiSecret=settings.API_SECRET,
-                                    orderIDPrefix=settings.ORDERID_PREFIX, postOnly=settings.POST_ONLY,
+                                    api_key=settings.API_KEY, api_secret=settings.API_SECRET,
+                                    order_id_prefix=settings.ORDERID_PREFIX, post_only=settings.POST_ONLY,
                                     timeout=settings.TIMEOUT)
 
     def cancel_order(self, order):
-        tickLog = self.get_instrument()['tickLog']
-        logger.info("Canceling: %s %d @ %.*f" % (order['side'], order['orderQty'], tickLog, order['price']))
+        tick_log = self.get_instrument()['tickLog']
+        logger.info("Canceling: %s %d @ %.*f" % (order['side'], order['orderQty'], tick_log, order['price']))
         while True:
             try:
                 self.bitmex.cancel(order['orderID'])
@@ -53,14 +53,14 @@ class ExchangeInterface:
             return
 
         logger.info("Resetting current position. Canceling all existing orders.")
-        tickLog = self.get_instrument()['tickLog']
+        tick_log = self.get_instrument()['tickLog']
 
         # In certain cases, a WS update might not make it through before we call this.
         # For that reason, we grab via HTTP to ensure we grab them all.
         orders = self.bitmex.http_open_orders()
 
         for order in orders:
-            logger.info("Canceling: %s %d @ %.*f" % (order['side'], order['orderQty'], tickLog, order['price']))
+            logger.info("Canceling: %s %d @ %.*f" % (order['side'], order['orderQty'], tick_log, order['price']))
 
         if len(orders):
             self.bitmex.cancel([order['orderID'] for order in orders])
@@ -233,7 +233,7 @@ class OrderManager:
         margin = self.exchange.get_margin()
         position = self.exchange.get_position()
         self.running_qty = self.exchange.get_delta()
-        tickLog = self.exchange.get_instrument()['tickLog']
+        tick_log = self.exchange.get_instrument()['tickLog']
         self.start_XBt = margin["marginBalance"]
 
         logger.info("Current XBT Balance: %.6f" % XBt_to_XBT(self.start_XBt))
@@ -241,14 +241,14 @@ class OrderManager:
         if settings.CHECK_POSITION_LIMITS:
             logger.info("Position limits: %d/%d" % (settings.MIN_POSITION, settings.MAX_POSITION))
         if position['currentQty'] != 0:
-            logger.info("Avg Cost Price: %.*f" % (tickLog, float(position['avgCostPrice'])))
-            logger.info("Avg Entry Price: %.*f" % (tickLog, float(position['avgEntryPrice'])))
+            logger.info("Avg Cost Price: %.*f" % (tick_log, float(position['avgCostPrice'])))
+            logger.info("Avg Entry Price: %.*f" % (tick_log, float(position['avgEntryPrice'])))
         logger.info("Contracts Traded This Run: %d" % (self.running_qty - self.starting_qty))
         logger.info("Total Contract Delta: %.4f XBT" % self.exchange.calc_delta()['spot'])
 
     def get_ticker(self):
         ticker = self.exchange.get_ticker()
-        tickLog = self.exchange.get_instrument()['tickLog']
+        tick_log = self.exchange.get_instrument()['tickLog']
 
         # Set up our buy & sell positions as the smallest possible unit above and below the current spread
         # and we'll work out from there. That way we always have the best price but we don't kill wide
@@ -274,11 +274,11 @@ class OrderManager:
         self.start_position_mid = ticker["mid"]
         logger.info(
             "%s Ticker: Buy: %.*f, Sell: %.*f" %
-            (self.instrument['symbol'], tickLog, ticker["buy"], tickLog, ticker["sell"])
+            (self.instrument['symbol'], tick_log, ticker["buy"], tick_log, ticker["sell"])
         )
         logger.info('Start Positions: Buy: %.*f, Sell: %.*f, Mid: %.*f' %
-                    (tickLog, self.start_position_buy, tickLog, self.start_position_sell,
-                     tickLog, self.start_position_mid))
+                    (tick_log, self.start_position_buy, tick_log, self.start_position_sell,
+                     tick_log, self.start_position_mid))
         return ticker
 
     def get_price_offset(self, index):
@@ -341,7 +341,7 @@ class OrderManager:
            This involves amending any open orders and creating new ones if any have filled completely.
            We start from the closest orders outward."""
 
-        tickLog = self.exchange.get_instrument()['tickLog']
+        tick_log = self.exchange.get_instrument()['tickLog']
         to_amend = []
         to_create = []
         to_cancel = []
@@ -385,9 +385,9 @@ class OrderManager:
                 reference_order = [o for o in existing_orders if o['orderID'] == amended_order['orderID']][0]
                 logger.info("Amending %4s: %d @ %.*f to %d @ %.*f (%+.*f)" % (
                     amended_order['side'],
-                    reference_order['leavesQty'], tickLog, reference_order['price'],
-                    (amended_order['orderQty'] - reference_order['cumQty']), tickLog, amended_order['price'],
-                    tickLog, (amended_order['price'] - reference_order['price'])
+                    reference_order['leavesQty'], tick_log, reference_order['price'],
+                    (amended_order['orderQty'] - reference_order['cumQty']), tick_log, amended_order['price'],
+                    tick_log, (amended_order['price'] - reference_order['price'])
                 ))
             # This can fail if an order has closed in the time we were processing.
             # The API will send us `invalid ordStatus`, which means that the order's status (Filled/Canceled)
@@ -408,14 +408,14 @@ class OrderManager:
         if len(to_create) > 0:
             logger.info("Creating %d orders:" % (len(to_create)))
             for order in reversed(to_create):
-                logger.info("%4s %d @ %.*f" % (order['side'], order['orderQty'], tickLog, order['price']))
+                logger.info("%4s %d @ %.*f" % (order['side'], order['orderQty'], tick_log, order['price']))
             self.exchange.create_bulk_orders(to_create)
 
         # Could happen if we exceed a delta limit
         if len(to_cancel) > 0:
             logger.info("Canceling %d orders:" % (len(to_cancel)))
             for order in reversed(to_cancel):
-                logger.info("%4s %d @ %.*f" % (order['side'], order['leavesQty'], tickLog, order['price']))
+                logger.info("%4s %d @ %.*f" % (order['side'], order['leavesQty'], tick_log, order['price']))
             self.exchange.cancel_bulk_orders(to_cancel)
 
     ###
@@ -530,9 +530,9 @@ def XBt_to_XBT(XBt):
 
 
 def cost(instrument, quantity, price):
-    mult = instrument["multiplier"]
-    P = mult * price if mult >= 0 else mult / price
-    return abs(quantity * P)
+    multiplier = instrument["multiplier"]
+    instrument_price = multiplier * price if multiplier >= 0 else multiplier / price
+    return abs(quantity * instrument_price)
 
 
 def margin(instrument, quantity, price):

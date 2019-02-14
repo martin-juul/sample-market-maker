@@ -5,12 +5,12 @@ class AccessTokenAuth(AuthBase):
 
     """Attaches Access Token Authentication to the given Request object."""
 
-    def __init__(self, accessToken):
+    def __init__(self, access_token):
         """Init with Token."""
-        self.token = accessToken
+        self.token = access_token
 
     def __call__(self, r):
         """Called when forming a request - generates access token header."""
-        if (self.token):
+        if self.token:
             r.headers['access-token'] = self.token
         return r
